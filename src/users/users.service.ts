@@ -24,10 +24,6 @@ export class UserService implements IUserService {
   }
 
   async findUser(findUserParams: FindUserParams): Promise<User> {
-    console.log(
-      '🚀 ~ UserService ~ findUser ~ findUserParams:',
-      findUserParams,
-    );
     const user = this.userRepository.findOne({ where: findUserParams });
     return user;
   }
