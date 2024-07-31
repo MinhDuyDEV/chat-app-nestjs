@@ -11,7 +11,7 @@ import {
 } from '@nestjs/common';
 import { IAuthService } from './auth';
 import { CreateUserDto } from './dtos/create-user.dto';
-import { Routes, Services } from './utils/constants';
+import { Routes, Services } from '../utils/constants';
 import { IUserService } from 'src/users/users';
 import { instanceToPlain } from 'class-transformer';
 import { AuthenticatedGuard, LocalAuthGuard } from './utils/Guards';
