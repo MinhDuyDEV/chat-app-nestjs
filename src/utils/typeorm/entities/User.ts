@@ -1,12 +1,5 @@
 import { Exclude } from 'class-transformer';
-import {
-  Column,
-  Entity,
-  PrimaryGeneratedColumn,
-  JoinColumn,
-  OneToOne,
-} from 'typeorm';
-import { Participant } from './Participant';
+import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'users' })
 export class User {
@@ -25,8 +18,4 @@ export class User {
   @Column()
   @Exclude()
   password: string;
-
-  @OneToOne(() => Participant)
-  @JoinColumn()
-  participant: Participant;
 }

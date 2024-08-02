@@ -1,4 +1,12 @@
-import { Body, Controller, Inject, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Inject,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 
 import { User } from 'src/utils/typeorm';
 import { AuthUser } from 'src/utils/decorators';
@@ -20,9 +28,19 @@ export class ConversationsController {
     @AuthUser() user: User,
     @Body() createConversationPayload: CreateConversationDto,
   ) {
-    return this.conversationsService.createConversation(
+    return await this.conversationsService.createConversation(
       user,
       createConversationPayload,
     );
+  }
+
+  @Get()
+  async getConversations(@AuthUser() { id }: User) {
+    return this.conversationsService.getConversations(id);
+  }
+
+  @Get(':id')
+  async getConversationById(@Param('id') id: number) {
+    return await this.conversationsService.findConversationById(id);
   }
 }
