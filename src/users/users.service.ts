@@ -1,8 +1,9 @@
-import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
-import { IUserService } from './users';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from 'src/utils/typeorm';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+
 import { Repository } from 'typeorm';
+import { IUserService } from './users';
+import { User } from 'src/utils/typeorm';
 import { hashPassword } from 'src/utils/helpers';
 import { CreateUserDetails, FindUserParams } from 'src/utils/types';
 
@@ -24,7 +25,13 @@ export class UserService implements IUserService {
   }
 
   async findUser(findUserParams: FindUserParams): Promise<User> {
-    const user = this.userRepository.findOne({ where: findUserParams });
-    return user;
+    return this.userRepository.findOne({
+      where: { ...findUserParams },
+      relations: ['participant'],
+    });
+  }
+
+  async saveUser(user: User): Promise<User> {
+    return this.userRepository.save(user);
   }
 }
