@@ -24,6 +24,20 @@ export class MessagesService implements IMessageService {
     const conversation = await this.conversationRepository.findOne({
       where: { id: conversationId },
       relations: ['creator', 'recipient'],
+      select: {
+        creator: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+        },
+        recipient: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
     });
     if (!conversation)
       throw new HttpException('Conversation not found', HttpStatus.BAD_REQUEST);
@@ -37,10 +51,11 @@ export class MessagesService implements IMessageService {
       conversation,
       author: instanceToPlain(user),
     });
-    conversation.lastMessageSent =
-      await this.messageRepository.save(newMessage);
+    const savedMessage = await this.messageRepository.save(newMessage);
+    conversation.lastMessageSent = savedMessage;
     await this.conversationRepository.save(conversation);
-    return;
+    console.log('🚀 ~ MessagesService ~ savedMessage:', savedMessage);
+    return savedMessage;
   }
 
   getMessagesByConversationId(conversationId: number): Promise<Message[]> {
@@ -48,6 +63,14 @@ export class MessagesService implements IMessageService {
       relations: ['author'],
       where: { conversation: { id: conversationId } },
       order: { createdAt: 'ASC' },
+      select: {
+        author: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+        },
+      },
     });
   }
 }
