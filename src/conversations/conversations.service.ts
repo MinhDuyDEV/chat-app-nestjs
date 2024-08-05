@@ -35,6 +35,12 @@ export class ConversationsService implements IConversationsService {
         'recipient.lastName',
         'recipient.email',
       ])
+      .leftJoin('conversation.lastMessageSent', 'lastMessageSent')
+      .addSelect([
+        'lastMessageSent.id',
+        'lastMessageSent.content',
+        'lastMessageSent.createdAt',
+      ])
       .where('creator.id = :id', { id })
       .orWhere('recipient.id = :id', { id })
       .orderBy('conversation.id', 'DESC')
