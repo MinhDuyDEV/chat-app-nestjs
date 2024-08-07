@@ -4,6 +4,7 @@ import {
   Get,
   Inject,
   Param,
+  ParseIntPipe,
   Post,
   UseGuards,
 } from '@nestjs/common';
@@ -39,7 +40,11 @@ export class MessagesController {
   }
 
   @Get(':conversationId')
-  getMessagesFromConversation(@Param('conversationId') conversationId: number) {
-    return this.messageService.getMessagesByConversationId(conversationId);
+  async getMessagesFromConversation(
+    @Param('conversationId', ParseIntPipe) conversationId: number,
+  ) {
+    const messages =
+      await this.messageService.getMessagesByConversationId(conversationId);
+    return { id: conversationId, messages };
   }
 }
