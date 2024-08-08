@@ -6,6 +6,7 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { IMessageService } from './messages';
 import { CreateMessageParams } from 'src/utils/types';
 import { Conversation, Message } from 'src/utils/typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class MessagesService implements IMessageService {
@@ -14,6 +15,7 @@ export class MessagesService implements IMessageService {
     private readonly messageRepository: Repository<Message>,
     @InjectRepository(Conversation)
     private readonly conversationRepository: Repository<Conversation>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createMessage({
@@ -54,7 +56,7 @@ export class MessagesService implements IMessageService {
     const savedMessage = await this.messageRepository.save(newMessage);
     conversation.lastMessageSent = savedMessage;
     await this.conversationRepository.save(conversation);
-    console.log('🚀 ~ MessagesService ~ savedMessage:', savedMessage);
+    this.eventEmitter.emit('message.create', savedMessage);
     return savedMessage;
   }
 

@@ -8,7 +8,6 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { EventEmitter2 } from '@nestjs/event-emitter';
 
 import { User } from 'src/utils/typeorm';
 import { IMessageService } from './messages';
@@ -22,7 +21,6 @@ import { CreateMessageDto } from './dtos/CreateMessage.dto';
 export class MessagesController {
   constructor(
     @Inject(Services.MESSAGES) private readonly messageService: IMessageService,
-    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   @Post()
@@ -30,12 +28,10 @@ export class MessagesController {
     @AuthUser() user: User,
     @Body() createMessageDto: CreateMessageDto,
   ) {
-    // return this.messageService.createMessage({ ...createMessageDto, user });
-    const msg = await this.messageService.createMessage({
+    await this.messageService.createMessage({
       ...createMessageDto,
       user,
     });
-    this.eventEmitter.emit('message.create', msg);
     return;
   }
 
