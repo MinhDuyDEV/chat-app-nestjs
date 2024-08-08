@@ -5,6 +5,7 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
+import { CreateMessageResponse } from 'src/utils/types';
 
 @WebSocketGateway({
   cors: {
@@ -20,10 +21,7 @@ export class MessagingGateway implements OnGatewayConnection {
   server: Server;
 
   @OnEvent('message.create')
-  handleMessageCreateEvent(payload: any) {
-    this.server.emit('onMessage', {
-      message: payload,
-      conversation: payload.conversation,
-    });
+  handleMessageCreateEvent(payload: CreateMessageResponse) {
+    this.server.emit('onMessage', payload);
   }
 }

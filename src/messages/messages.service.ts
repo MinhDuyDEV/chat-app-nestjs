@@ -4,7 +4,7 @@ import { instanceToPlain } from 'class-transformer';
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 
 import { IMessageService } from './messages';
-import { CreateMessageParams } from 'src/utils/types';
+import { CreateMessageParams, CreateMessageResponse } from 'src/utils/types';
 import { Conversation, Message } from 'src/utils/typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
@@ -22,10 +22,10 @@ export class MessagesService implements IMessageService {
     user,
     content,
     conversationId,
-  }: CreateMessageParams): Promise<Message> {
+  }: CreateMessageParams): Promise<CreateMessageResponse> {
     const conversation = await this.conversationRepository.findOne({
       where: { id: conversationId },
-      relations: ['creator', 'recipient'],
+      relations: ['creator', 'recipient', 'lastMessageSent'],
       select: {
         creator: {
           id: true,
@@ -56,8 +56,13 @@ export class MessagesService implements IMessageService {
     const savedMessage = await this.messageRepository.save(newMessage);
     conversation.lastMessageSent = savedMessage;
     await this.conversationRepository.save(conversation);
-    this.eventEmitter.emit('message.create', savedMessage);
-    return savedMessage;
+    const updatedConversation =
+      await this.conversationRepository.save(conversation);
+    this.eventEmitter.emit('message.create', {
+      message: savedMessage,
+      conversation: updatedConversation,
+    });
+    return { message: savedMessage, conversation: updatedConversation };
   }
 
   getMessagesByConversationId(conversationId: number): Promise<Message[]> {
