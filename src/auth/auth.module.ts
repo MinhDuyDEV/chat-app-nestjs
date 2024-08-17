@@ -5,9 +5,11 @@ import { Services } from '../utils/constants';
 import { UsersModule } from 'src/users/users.module';
 import { LocalStrategy } from './utils/LocalStrategy';
 import { SessionSerializer } from './utils/SessionSerializer';
+import { ConversationsModule } from 'src/conversations/conversations.module';
+import { MessagesModule } from 'src/messages/messages.module';
 
 @Module({
-  imports: [UsersModule],
+  imports: [UsersModule, ConversationsModule, MessagesModule],
   controllers: [AuthController],
   providers: [
     LocalStrategy,

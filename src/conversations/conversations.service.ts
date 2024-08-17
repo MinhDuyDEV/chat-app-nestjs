@@ -1,5 +1,4 @@
 import { Repository } from 'typeorm';
-import { plainToClass } from 'class-transformer';
 import { InjectRepository } from '@nestjs/typeorm';
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common';
 
@@ -8,6 +7,7 @@ import { IUserService } from 'src/users/users';
 import { Conversation, User } from 'src/utils/typeorm';
 import { IConversationsService } from './conversations';
 import { CreateConversationParams } from 'src/utils/types';
+import { IMessageService } from 'src/messages/messages';
 
 @Injectable()
 export class ConversationsService implements IConversationsService {
@@ -16,6 +16,8 @@ export class ConversationsService implements IConversationsService {
     private readonly conversationRepository: Repository<Conversation>,
     @Inject(Services.USERS)
     private readonly userService: IUserService,
+    @Inject(Services.MESSAGES)
+    private readonly messageService: IMessageService,
   ) {}
 
   async getConversations(id: number): Promise<Conversation[]> {
@@ -49,43 +51,37 @@ export class ConversationsService implements IConversationsService {
   }
 
   async createConversation(user: User, params: CreateConversationParams) {
-    const { recipientId } = params;
-
-    if (user.id === params.recipientId)
-      throw new HttpException(
-        'Cannot Create Conversation',
-        HttpStatus.BAD_REQUEST,
-      );
-
+    const { email, message } = params;
+    const existingRecipient = await this.userService.findUser({ email });
+    if (!existingRecipient)
+      throw new HttpException('Recipient not found', HttpStatus.BAD_REQUEST);
     const existingConversation = await this.conversationRepository.findOne({
       where: [
         {
           creator: { id: user.id },
-          recipient: { id: recipientId },
+          recipient: { id: existingRecipient.id },
         },
         {
-          creator: { id: recipientId },
+          creator: { id: existingRecipient.id },
           recipient: { id: user.id },
         },
       ],
       relations: ['creator', 'recipient'],
     });
-
     if (existingConversation)
       throw new HttpException('Conversation exists', HttpStatus.CONFLICT);
-    const recipient = await this.userService.findUser({ id: recipientId });
 
-    if (!recipient)
-      throw new HttpException('Recipient not found', HttpStatus.BAD_REQUEST);
-
-    const conversation = this.conversationRepository.create({
+    const newConversation = this.conversationRepository.create({
       creator: user,
-      recipient: recipient,
+      recipient: existingRecipient,
     });
-
-    return plainToClass(
-      Conversation,
-      this.conversationRepository.save(conversation),
-    );
+    const savedConversation =
+      await this.conversationRepository.save(newConversation);
+    const lastMessageSent = await this.messageService.createMessage({
+      content: message,
+      conversationId: savedConversation.id,
+      user,
+    });
+    return { ...savedConversation, lastMessageSent: lastMessageSent.message };
   }
 }
